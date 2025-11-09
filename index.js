@@ -36,6 +36,13 @@ async function run() {
       res.send(result);
     });
 
+    //recent properties (newest first, limit 6)
+    app.get("/recent-properties", async (req, res) => {
+      const cursor = propertyCollection.find().sort({ createdAt: -1 }).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     //single properties
     app.get("/properties/:id", async (req, res) => {
       const id = req.params.id;

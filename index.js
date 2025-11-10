@@ -27,11 +27,24 @@ async function run() {
 
     const db = client.db("propertyDB");
     const propertyCollection = db.collection("properties");
+    const reviewCollection = db.collection("reviews");
 
     // get / read
     //all properties
     app.get("/properties", async (req, res) => {
       const cursor = propertyCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //my properties (filtered by userEmail)
+    app.get("/my-properties", async (req, res) => {
+      const { userEmail } = req.query;
+      if (!userEmail) {
+        return res.status(400).send({ error: "userEmail is required" });
+      }
+      const query = { userEmail };
+      const cursor = propertyCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -66,7 +79,11 @@ async function run() {
       const update = {
         $set: {
           name: updatedProperty.name,
+          description: updatedProperty.description,
+          category: updatedProperty.category,
           price: updatedProperty.price,
+          location: updatedProperty.location,
+          image: updatedProperty.image,
         },
       };
       const result = await propertyCollection.updateOne(query, update);
@@ -78,6 +95,35 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await propertyCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // Reviews endpoints
+    // Get reviews for a property
+    app.get("/reviews/:propertyId", async (req, res) => {
+      const { propertyId } = req.params;
+      const query = { propertyId };
+      const cursor = reviewCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // Get reviews by user
+    app.get("/my-reviews", async (req, res) => {
+      const { userEmail } = req.query;
+      if (!userEmail) {
+        return res.status(400).send({ error: "userEmail is required" });
+      }
+      const query = { userEmail };
+      const cursor = reviewCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // Add a review
+    app.post("/reviews", async (req, res) => {
+      const newReview = req.body;
+      const result = await reviewCollection.insertOne(newReview);
       res.send(result);
     });
 

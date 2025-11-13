@@ -32,8 +32,7 @@ async function run() {
     // get / read
     //all properties
     app.get("/properties", async (req, res) => {
-      const {
-      } = req.query;
+      const { search, sortBy, sortOrder } = req.query;
       let query = {};
       let sortOptions = {};
 
@@ -42,16 +41,22 @@ async function run() {
         query.name = { $regex: search, $options: "i" };
       }
 
-
       // Sort functionality
-      if (sortBy) {
-        sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+      if (sortBy === "price") {
+        sortOptions.priceNum = sortOrder === "asc" ? 1 : -1;
+      } else if (sortBy === "createdAt") {
+        sortOptions.createdAt = sortOrder === "asc" ? 1 : -1;
       } else {
         // sort by createdAt descending (newest first)
         sortOptions.createdAt = -1;
       }
 
-      const cursor = propertyCollection.find(query).sort(sortOptions);
+      const pipeline = [];
+      if (Object.keys(query).length > 0) pipeline.push({ $match: query });
+      pipeline.push({ $addFields: { priceNum: { $toInt: "$price" } } });
+      pipeline.push({ $sort: sortOptions });
+
+      const cursor = propertyCollection.aggregate(pipeline);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -157,7 +162,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+      "Pinged your deployment. You successfully connected to MongoDB!!!"
     );
 
     app.get("/", (req, res) => {

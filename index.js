@@ -32,7 +32,24 @@ async function run() {
     // get / read
     //all properties
     app.get("/properties", async (req, res) => {
-      const cursor = propertyCollection.find();
+      const { search, sortBy, sortOrder = "desc" } = req.query;
+      let query = {};
+      let sortOptions = {};
+
+      // Search functionality
+      if (search) {
+        query.name = { $regex: search, $options: "i" };
+      }
+
+      // Sort functionality
+      if (sortBy) {
+        sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+      } else {
+        // sort by createdAt descending (newest first)
+        sortOptions.createdAt = -1;
+      }
+
+      const cursor = propertyCollection.find(query).sort(sortOptions);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -124,6 +141,14 @@ async function run() {
     app.post("/reviews", async (req, res) => {
       const newReview = req.body;
       const result = await reviewCollection.insertOne(newReview);
+      res.send(result);
+    });
+
+    // Delete a review
+    app.delete("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewCollection.deleteOne(query);
       res.send(result);
     });
 

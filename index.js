@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("propertyDB");
     const propertyCollection = db.collection("properties");
@@ -32,7 +32,8 @@ async function run() {
     // get / read
     //all properties
     app.get("/properties", async (req, res) => {
-      const { search, sortBy, sortOrder = "desc" } = req.query;
+      const {
+      } = req.query;
       let query = {};
       let sortOptions = {};
 
@@ -40,6 +41,7 @@ async function run() {
       if (search) {
         query.name = { $regex: search, $options: "i" };
       }
+
 
       // Sort functionality
       if (sortBy) {
@@ -153,7 +155,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
